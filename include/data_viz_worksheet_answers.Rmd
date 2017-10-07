@@ -1,0 +1,128 @@
+---
+title: "Data Visualization in R Worksheet Answers"
+output:
+  html_document:
+    highlight: tango
+    toc: yes
+  pdf_document:
+    highlight: tango
+    toc: yes
+date: "November 27, 2014"
+author: "Leland Taylor"
+---
+
+# Data Visualization in R 
+
+Worksheet for Data Visualization in R class. The data we use is from the *Anscombe* dataset.
+
+http://vincentarelbundock.github.io/Rdatasets/doc/car/Anscombe.html
+
+The Anscombe data frame has 51 rows and 4 columns. The observations are the U. S. states plus Washington, D. C. in 1970.
+
+
+This data frame contains the following columns:
+
+* education
+    * Per-capita education expenditures, dollars.
+* income
+    * Per-capita income, dollars.
+* young
+    * Proportion under 18, per 1000.
+* urban
+    * Proportion urban, per 1000.
+
+# load packages
+
+```{r package, eval=T, echo=TRUE, results='markup', error=FALSE }
+#install.packages("car") # download data
+
+library(car)
+library(ggplot2)
+library(reshape2)
+```
+
+# process the data 
+
+When running this on your own, you can load the pre-processed data using *read.csv*
+
+```{r process, eval=T, echo=TRUE, results='markup', error=FALSE }
+# generate the data for boxplots
+dat_bx = melt(Anscombe)
+write.csv(dat_bx, file = "Anscombe_summarize.csv", row.names=F)
+
+# generate the data for regressions
+dat_lm = melt(Anscombe, id.vars = c("education"))
+write.csv(dat_lm, file = "Anscombe_regression.csv", row.names=F)
+
+# read in the data
+dat_bx = read.csv("Anscombe_summarize.csv", header=T)
+dat_lm = read.csv("Anscombe_regression.csv", header=T)
+```
+
+# challenge 1
+
+Potential solutions to challenge 1
+
+```{r c1, eval=T, echo=TRUE, results='markup', error=FALSE }
+# boxplot
+ggplot(dat_bx, aes(x=variable, y=value, fill=variable)) + geom_boxplot(outlier.shape = NA) + geom_jitter()
+
+# regressions
+ggplot(dat_lm, aes(x=value, y=education, color=variable)) + geom_point(aes(color=variable)) + stat_smooth(method="lm", color="black")
+
+ggplot(dat_lm, aes(x=value, y=education, color=variable)) + geom_point() + stat_smooth(method="lm", se=F)
+```
+
+
+# challenge 2
+
+Potential solutions to challenge 2
+
+```{r c2, eval=T, echo=TRUE, results='markup', error=FALSE }
+# boxplot
+ggplot(dat_bx, aes(x=variable, y=value, fill=variable)) + geom_boxplot(outlier.shape = NA) + geom_jitter() + labs(x=NULL, y="Values", title="Distributions of data") + guides(fill=guide_legend(title=NULL))
+
+ggplot(dat_bx, aes(x=variable, y=value, fill=variable)) + geom_boxplot(outlier.shape = NA) + geom_jitter() + labs(x=NULL, y="log10(Values)", title="Distributions of data") + guides(fill=guide_legend(title=NULL)) + scale_y_log10()
+```
+
+# challenge 3
+
+Potential solutions to challenge 3
+
+```{r c3, eval=T, echo=TRUE, results='markup', error=FALSE }
+# initialize the plot
+plt = ggplot(dat_lm, aes(x=value, y=education, color=variable)) + geom_point() 
+
+# add a linear regression
+plt = plt + stat_smooth(method="lm") 
+
+# set axis labels
+plt = plt + labs(x="Value", 
+                 y="Per-capita education expenditures", 
+                 title="Linear regression (edu ~ value)")
+
+# set guide label
+plt = plt + guides(color=guide_legend(title="Variable")) 
+
+# change the theme
+plt = plt + theme_bw() 
+
+# EBI colors :)
+plt = plt + scale_color_manual(values=c("#71B360", "#48877C", "#CC6D78")) 
+
+# wrap
+plt = plt + facet_wrap(~ variable, scales="free") 
+
+# Adjust the x axis so we can read them
+plt = plt + theme( axis.text.x=element_text( angle=-45, hjust=0 ) ) 
+
+# show the plot to the screen
+show(plt)
+
+
+# save the plot to a pdf
+pdf(file="challenge_3.pdf", height=5, width=6)
+  print(plt)
+dev.off()
+```
+

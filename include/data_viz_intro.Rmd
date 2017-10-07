@@ -1,0 +1,297 @@
+---
+title: "Data Visualization in R"
+output:
+  html_document:
+    highlight: tango
+    toc: yes
+  pdf_document:
+    highlight: tango
+    toc: yes
+date: "November 27, 2014"
+author: "Leland Taylor"
+---
+
+# Data Visualization in R #
+
+Help resources for Data Visualization in R class. 
+
+Resources:
+
+- R: http://www.r-project.org/
+- R IDE: http://www.rstudio.com/
+- Learn R with R: http://swirlstats.com/
+
+# R basics #
+
+## help ##
+
+R can help you learn R. 
+
+```{r example, eval=F, echo=TRUE, results='markup', error=FALSE }
+help(print)
+example(print)
+
+# pull up the R help webpage
+help.start() 
+
+# search the R website
+RSiteSearch("print")
+```
+
+
+## packages ##
+
+Packages are bundles of functions that "extend" the core R language. The default repository for most packages it CRAN (http://cran.r-project.org/). 
+
+Packages are easy to install. Install the devtools package. 
+```{r install_package, eval=F, echo=TRUE, results='markup', error=FALSE }
+install.packages("devtools")
+```
+
+You can load a package like this:
+```{r load_package, eval=F, echo=TRUE, results='hide', error=FALSE }
+library("devtools")
+```
+
+You can update all installed packages using this command
+```{r update_package, eval=F, echo=TRUE, results='markup', error=FALSE }
+update.packages(checkBuilt=TRUE, ask=FALSE)
+```
+
+We just installed the devtools package. This package gives you more flexibility and allows you to install 3rd party packages hosted on github or another code repository. 
+```{r devtools_install, eval=F, echo=TRUE, results='markup', error=FALSE }
+# use devtools to install the developmental version of devtools. 
+devtools::install_github("devtools")
+```
+
+You can unstall packages like so
+```{r remove_package, eval=F, echo=TRUE, results='markup', error=FALSE }
+remove.packages("devtools")
+```
+
+Some packages also supplemental documentation called vignettes. View all available vignettes like so:
+```{r vignette, eval=F, echo=TRUE, results='markup', error=FALSE }
+vignette()
+
+# show all of the options under the grid vignette
+vignette(package = "grid")
+
+# show the grid vignette
+vignette("grid")
+```
+
+
+
+# ggplot2 for data visualization #
+
+>The code, concepts, and examples in this module are derived from 
+>resources by Hadley Wickham made available under the under the Creative Commons 
+>Attribution-Noncommercial 3.0 United States License 
+>http://creativecommons.org/licenses/. http://had.co.nz/ and http://ggplot2.org/
+
+## set up ggplot2 ##
+
+Install ggplot2
+```{r ggplot2_install, eval=FALSE, echo=TRUE, results='markup', error=FALSE }
+# Install the ggplot2 package
+install.packages("ggplot2")
+```
+
+Load the ggplot2 package
+```{r ggplot2_load, eval=TRUE, echo=TRUE, results='markup', error=FALSE }
+# Load the ggplot2 package
+library(ggplot2)
+```
+
+ggplot2 comes with pre-installed datasets. Look at the data we're going to use.
+```{r data, eval=TRUE, echo=TRUE, results='markup', error=FALSE }
+str(mpg)
+head(mpg)
+```
+
+## ggplot2 basics and scatter plots ##
+
+Scatter plots are great for:
+
+- Big patterns
+- Small patterns
+- Deviations from the pattern 
+- Strange patterns
+
+### ggplot2 layers ### 
+
+qplot is the ggplot2 version of R's plot function. qplot is a wrapper for creating a number of different types of plots using a consistent calling scheme.
+```{r qplot, fig.width=3, fig.height=3}
+qplot(displ, hwy, data = mpg)
+```
+
+We can make the same plot in a slightly longer fashion, but have more control over the plots. In this example *ggplot* is our base layer. *geom_point* is a layer we add on top of our base layer.
+```{r ggplot2, fig.width=3, fig.height=3}
+# ggplot is our "base"
+# geom_point is a "layer" that we add
+ggplot(mpg, aes(x=displ, y=hwy)) + geom_point()
+```
+
+
+### aesthetics ### 
+
+Aesthetics make plots pretty with colors, point size, point shapes, and point gradients.
+
+```{r aes, fig.width=5, fig.height=4}
+# aes stands for aesthetics you can set alot of different things here.
+# add color
+ggplot(mpg, aes(x=displ, y=hwy, color=class)) + geom_point()
+
+# add shape
+# we have to call factor because cyl is an int variable shapes are discrete
+ggplot(mpg, aes(x=displ, y=hwy, color=class, shape=factor(cyl))) + geom_point()
+
+# add size
+ggplot(mpg, aes(x=displ, y=hwy, color=class, size=cty)) + geom_point()
+
+# add alpha
+ggplot(mpg, aes(x=displ, y=hwy, alpha=displ)) + geom_point()
+
+# quick tip: you can move the aesthetics declaration to
+# other layers. ie, aesthetics can be local instead of global
+ggplot(mpg) + geom_point(aes(x=displ, y=hwy, size=cty))
+```
+
+
+### manipulating the plot ### 
+
+How to change labels, scales, and legends. 
+
+```{r manipulate, fig.width=5, fig.height=4}
+# adding labels
+ggplot(mpg, aes(x=displ, y=hwy, color=class)) + geom_point() + ylab("Miles per gallon on the Highway")
+ggplot(mpg, aes(x=displ, y=hwy, color=class)) + geom_point() + ggtitle("Cars") + xlab("")
+
+# changing scales
+last_plot() + ylim(20, 30)
+ggplot(mpg, aes(x=displ, y=hwy, color=class)) + geom_point() + scale_x_reverse("Engine Displacement in Litres (reversed)")
+
+# playing with legends
+last_plot() + guides(color=guide_legend(title=NULL))
+last_plot() + guides(color=guide_legend(title="Car Class"))
+```
+
+### saving your plot ### 
+
+How to save your beautiful plots. 
+
+```{r save, eval=F, echo=TRUE, results='markup', error=FALSE }
+# ggsave is a high level saving function that will figure stuff out for you 
+# (e.g. image size, image format). 
+#  it will default to save the last plot you generated
+ggsave("cars.pdf")
+
+# PDFs - the file records information on each point
+# if you have many points in a scatterplot dont use this
+#
+# # dev.off() says stop writing to your pdf 
+pdf(file="cars01.pdf", height=5, width=6)
+    ggplot(mpg, aes(x=displ, y=hwy, color=class)) + geom_point()
+    ggplot(mpg, aes(x=displ, y=hwy, size=class)) + geom_point()
+dev.off()
+
+# PNGs - use if you have many datapoints
+# below are good default settings
+png(file="cars.png", width=1000, height=700, units='px', res=120)
+    ggplot(mpg, aes(x=displ, y=hwy, color=class)) + geom_point()
+dev.off()
+```
+
+
+
+
+
+
+
+# Bioconductor for visualizating high-throughput genomics data #
+
+Bioconductor is a repository for R packages related to bioinformatics http://www.bioconductor.org/ . 
+
+>Bioconductor provides tools for the analysis and comprehension of high-throughput genomic data. Bioconductor uses the R statistical programming language, and is open source and open development. It has two releases each year, 934 software packages, and an active user community.
+
+The Bioconductor / R combination is very powerful. Here are some example applications:
+
+* Visualize high-throughput genomics data
+* Differential gene expression analysis
+* Gene ontology enrichment
+* Workflows for analyzing variants, epigenomics data (e.g. ChIP-seq), transcriptome data...
+* Applying machine learning techniques to biological data
+
+
+Useful Resources:
+
+* Demo workflows - http://www.bioconductor.org/help/workflows/
+* Scalable Genomics with R and Bioconductor - http://arxiv.org/abs/1409.2864
+
+## install Bioconductor packages ##
+
+```{r bioconductor, eval=F, echo=TRUE, results='markup', error=FALSE }
+source("http://bioconductor.org/biocLite.R")
+biocLite()
+
+# install the GenomicRanges package
+# The GenomicRanges package serves as the foundation for representing 
+# genomic locations within the Bioconductor project.
+# You can read more about it later
+biocLite("GenomicRanges")
+
+library("GenomicRanges")
+vignette("GenomicRangesIntroduction")
+```
+
+## Bioconductor package examples ##
+
+### graphics ### 
+
+Sushi is a great bioconductor package for genomics. These examples are taken from the package vignette (http://www.bioconductor.org/packages/release/bioc/html/Sushi.html).
+```{r sushi_install, eval=FALSE, echo=TRUE, results='markup', error=FALSE }
+# install the package if you have not already
+biocLite("Sushi")
+```
+
+```{r sushi_demo, fig.width=5, fig.height=4}
+# load the package
+library(Sushi)
+
+# load some data included in the Sushi package
+Sushi_data = data(package = 'Sushi')
+data(list = Sushi_data$results[,3]) 
+
+# a basic manhattan plot
+plotManhattan(bedfile=Sushi_GWAS.bed, pvalues=Sushi_GWAS.bed[,5],
+              col=c("#1b9e77", "#d95f02"), genome=Sushi_hg18_genome, cex=0.75)
+labelgenome(genome=Sushi_hg18_genome, n=4,scale="Mb",
+            edgeblankfraction=0.20, cex.axis=.5)
+mtext("-log10(P)", side=2, line=1.75, cex=1, font=2)
+mtext("chromosome", side=1, line=1.75, cex=1, font=2)
+
+# plot bed graph signal
+chrom            = "chr11"
+chromstart       = 1955000
+chromend         = 1960000
+plotBedgraph(Sushi_ChIPSeq_CTCF.bedgraph, chrom, chromstart, chromend,
+             transparency=.50, color=c("#1b9e77"))
+plotBedgraph(Sushi_DNaseI.bedgraph, chrom, chromstart, chromend,
+             transparency=.50, color=c("#d95f02"), overlay=TRUE,
+             rescaleoverlay=TRUE)
+labelgenome(chrom, chromstart, chromend, n=3, scale="Kb")
+legend("topright", inset=0.025, legend=c("DNaseI","ChIP-seq (CTCF)"),
+       fill=opaque(c("#1b9e77", "#d95f02")), border=c("#1b9e77", "#d95f02"),
+       text.font=2, cex=1.0)
+
+# plot 5C interacting regions
+chrom            = "chr11"
+chromstart       = 1650000
+chromend         = 2350000
+pbpe = plotBedpe(Sushi_5C.bedpe, chrom, chromstart, chromend, flip=TRUE,
+                 plottype="lines")
+labelgenome(chrom, chromstart, chromend, side=3, n=3, scale="Mb")
+```
+
+
+
